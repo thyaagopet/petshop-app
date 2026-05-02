@@ -69,12 +69,21 @@ function salvar() {
 }
 
 function atualizarSelects() {
-  tutorSelect.innerHTML = "";
-  petSelect.innerHTML = "";
+  const tutorSel = document.getElementById("tutorSelect");
+  const petSel = document.getElementById("petSelect");
+
+  tutorSel.innerHTML = "<option>Selecione tutor</option>";
+  petSel.innerHTML = "<option>Selecione pet</option>";
 
   tutores.forEach(t => {
-    tutorSelect.innerHTML += `<option>${t.nome}</option>`;
+    tutorSel.innerHTML += `<option>${t.nome}</option>`;
   });
+
+  pets.forEach(p => {
+    petSel.innerHTML += `<option>${p.nome}</option>`;
+  });
+}
+  
 
   pets.forEach(p => {
     petSelect.innerHTML += `<option>${p.nome}</option>`;
