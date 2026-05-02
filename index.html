@@ -186,4 +186,23 @@ function render(){
   .forEach(a=>{
     lista.innerHTML+=`
     <tr>
-      <td>${new
+      <td>${new Date(a.data).toLocaleDateString()}</td>
+      <td>${a.hora}</td>
+      <td>${a.pet}</td>
+      <td>${a.tutor}</td>
+      <td>${a.servico}</td>
+      <td>R$ ${a.valor}</td>
+    </tr>`;
+  });
+}
+
+function iniciar(){
+  atualizar();
+  render();
+}
+
+document.addEventListener("DOMContentLoaded", iniciar);
+</script>
+
+</body>
+</html>
