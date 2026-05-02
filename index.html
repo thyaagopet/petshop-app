@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pet Shop Pro</title>
+<title>Pet Shop Pro+</title>
 
 <style>
 body { font-family: Arial; background:#ffe4ec; padding:10px;}
@@ -16,13 +16,13 @@ button { background:#e91e63; color:white; font-weight:bold;}
 table { width:100%; border-collapse:collapse; font-size:12px;}
 th, td { border:1px solid #ccc; padding:5px; text-align:center;}
 th { background:#e91e63; color:white;}
-.total { font-weight:bold; margin-top:10px; }
+.total { font-weight:bold; margin-top:5px;}
 </style>
 </head>
 
 <body>
 
-<h1>🐶 Pet Shop Pro</h1>
+<h1>🐶 Pet Shop Pro+</h1>
 
 <div class="card">
 <h3>Tutor</h3>
@@ -55,9 +55,11 @@ th { background:#e91e63; color:white;}
 <option value="80">Tosa</option>
 <option value="60">Remoção</option>
 <option value="200">Pacote Semanal</option>
+<option value="350">Pacote Quinzenal</option>
 </select>
 
 <button onclick="agendar()">Agendar</button>
+<button onclick="lembretesHoje()">📲 Lembretes do Dia</button>
 </div>
 
 <div class="card">
@@ -78,6 +80,8 @@ th { background:#e91e63; color:white;}
 </table>
 
 <div class="total" id="totalDia"></div>
+<div class="total" id="totalMes"></div>
+
 </div>
 
 <script>
@@ -129,27 +133,56 @@ function conflito(data,hora){
 }
 
 function agendar(){
-  let data=document.getElementById("data").value;
-  let hora=document.getElementById("hora").value;
+  let data=dataInput.value;
+  let hora=horaInput.value;
   let petNome=petSelect.value;
   let servicoSelect=document.getElementById("servico");
+
   let servicoNome=servicoSelect.options[servicoSelect.selectedIndex].text;
   let valor=parseFloat(servicoSelect.value);
 
   if(!data||!hora||!petNome) return;
 
   if(conflito(data,hora)){
-    alert("Horário já ocupado!");
+    alert("Horário ocupado!");
     return;
   }
 
   let pet=pets.find(p=>p.nome===petNome);
 
-  if(servicoNome==="Pacote Semanal"){
-    for(let i=0;i<4;i++){
-      let novaData=new Date(data);
-      novaData.setDate(novaData.getDate()+7*i);
+  let repeticoes = 1;
 
-      agenda.push({
-        data:novaData.toISOString().split("T")[0],
-        hora
+  if(servicoNome==="Pacote Semanal") repeticoes=4;
+  if(servicoNome==="Pacote Quinzenal") repeticoes=2;
+
+  for(let i=0;i<repeticoes;i++){
+    let novaData=new Date(data);
+    novaData.setDate(novaData.getDate()+7*i);
+
+    agenda.push({
+      data:novaData.toISOString().split("T")[0],
+      hora,
+      pet:pet.nome,
+      tutor:pet.tutor,
+      servico:servicoNome,
+      valor
+    });
+  }
+
+  salvar();
+  render();
+}
+
+function enviarWhats(tel, pet, data, hora) {
+  if (!tel) return;
+
+  tel = tel.replace(/\D/g, "");
+  if (!tel.startsWith("55")) tel = "55" + tel;
+
+  let msg = `Lembrete: ${pet} dia ${new Date(data).toLocaleDateString()} às ${hora} 🐶`;
+
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`);
+}
+
+function lembretesHoje(){
+  let hoje=new Date().toISOString().split("T
