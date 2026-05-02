@@ -3,26 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cão Turminha</title>
+<title>Agenda Pet Shop</title>
 
 <style>
-body { font-family: Arial; background: #ffe4ec; padding: 15px; }
-h1 { text-align: center; color: #e91e63; }
-input, select, button {
-  width: 100%; padding: 10px; margin-top: 5px;
-  border-radius: 8px; border: none;
+body {
+  font-family: Arial;
+  background: #ffe4ec;
+  padding: 10px;
 }
-button { background: #e91e63; color: white; font-weight: bold; }
+
+h1 {
+  text-align: center;
+  color: #e91e63;
+}
+
 .card {
-  background: white; padding: 15px;
-  border-radius: 12px; margin-top: 15px;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  background: #e91e63;
+  color: white;
+  font-weight: bold;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  text-align: center;
+  padding: 5px;
+}
+
+th {
+  background: #e91e63;
+  color: white;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🐶 Cão Turminha</h1>
+<h1>🐶 Agenda Pet Shop</h1>
 
 <div class="card">
 <h3>Cadastrar Tutor</h3>
@@ -48,22 +85,42 @@ button { background: #e91e63; color: white; font-weight: bold; }
 </div>
 
 <div class="card">
-<h3>Agenda</h3>
+<h3>Agendar</h3>
+
+<select id="dia">
+<option>Segunda</option>
+<option>Terça</option>
+<option>Quarta</option>
+<option>Quinta</option>
+<option>Sexta</option>
+<option>Sábado</option>
+</select>
+
+<input type="time" id="hora">
 
 <select id="petSelect"></select>
 
-<select id="servico">
-<option>Banho</option>
-<option>Tosa</option>
-<option>Remoção</option>
-<option>Pacote Semanal</option>
-</select>
-
-<input type="time" id="horario">
-
 <button onclick="agendar()">Agendar</button>
+</div>
 
-<ul id="agenda"></ul>
+<div class="card">
+<h3>Agenda Semanal</h3>
+
+<table id="tabela">
+<thead>
+<tr>
+<th>Hora</th>
+<th>Seg</th>
+<th>Ter</th>
+<th>Qua</th>
+<th>Qui</th>
+<th>Sex</th>
+<th>Sáb</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
 </div>
 
 <script>
@@ -71,94 +128,95 @@ let tutores = JSON.parse(localStorage.getItem("tutores") || "[]");
 let pets = JSON.parse(localStorage.getItem("pets") || "[]");
 let agenda = JSON.parse(localStorage.getItem("agenda") || "[]");
 
-function salvar() {
+const dias = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+
+function salvar(){
   localStorage.setItem("tutores", JSON.stringify(tutores));
   localStorage.setItem("pets", JSON.stringify(pets));
   localStorage.setItem("agenda", JSON.stringify(agenda));
 }
 
-function atualizarSelects() {
-  const tutorSel = document.getElementById("tutorSelect");
-  const petSel = document.getElementById("petSelect");
+function atualizarSelects(){
+  tutorSelect.innerHTML="";
+  petSelect.innerHTML="";
 
-  tutorSel.innerHTML = "";
-  petSel.innerHTML = "";
-
-  tutores.forEach(t => {
-    let op = document.createElement("option");
-    op.value = t.nome;
-    op.textContent = t.nome;
-    tutorSel.appendChild(op);
+  tutores.forEach(t=>{
+    tutorSelect.innerHTML += `<option>${t.nome}</option>`;
   });
 
-  pets.forEach(p => {
-    let op = document.createElement("option");
-    op.value = p.nome;
-    op.textContent = p.nome;
-    petSel.appendChild(op);
+  pets.forEach(p=>{
+    petSelect.innerHTML += `<option>${p.nome}</option>`;
   });
 }
 
-function addTutor() {
-  const nome = document.getElementById("tutorNome").value;
-  const tel = document.getElementById("tutorTel").value;
+function addTutor(){
+  const nome = tutorNome.value;
+  const tel = tutorTel.value;
 
-  if (!nome) return;
+  if(!nome) return;
 
-  tutores.push({ nome, tel });
+  tutores.push({nome,tel});
   salvar();
   atualizarSelects();
-
-  document.getElementById("tutorNome").value = "";
-  document.getElementById("tutorTel").value = "";
 }
 
-function addPet() {
-  const nome = document.getElementById("petNome").value;
-  const porte = document.getElementById("porte").value;
-  const tutor = document.getElementById("tutorSelect").value;
+function addPet(){
+  const nome = petNome.value;
+  const porte = porte.value;
+  const tutor = tutorSelect.value;
 
-  if (!nome || !tutor) return;
+  if(!nome || !tutor) return;
 
-  pets.push({ nome, porte, tutor });
+  pets.push({nome,porte,tutor});
   salvar();
   atualizarSelects();
-
-  document.getElementById("petNome").value = "";
 }
 
-function agendar() {
-  const pet = document.getElementById("petSelect").value;
-  const servico = document.getElementById("servico").value;
-  const horario = document.getElementById("horario").value;
+function agendar(){
+  const dia = document.getElementById("dia").value;
+  const hora = document.getElementById("hora").value;
+  const petNome = document.getElementById("petSelect").value;
 
-  if (!pet || !horario) {
-    alert("Escolha pet e horário");
-    return;
+  if(!hora || !petNome) return;
+
+  const pet = pets.find(p=>p.nome===petNome);
+
+  agenda.push({
+    dia,
+    hora,
+    pet: pet.nome,
+    tutor: pet.tutor
+  });
+
+  salvar();
+  renderTabela();
+}
+
+function renderTabela(){
+  const tbody = document.querySelector("#tabela tbody");
+  tbody.innerHTML="";
+
+  for(let h=9; h<=19; h++){
+    let linha = `<tr><td>${h}:00</td>`;
+
+    dias.forEach(d=>{
+      const item = agenda.find(a=>a.dia===d && a.hora.startsWith(h.toString().padStart(2,"0")));
+
+      if(item){
+        linha += `<td>${item.pet}<br><small>${item.tutor}</small></td>`;
+      } else {
+        linha += `<td></td>`;
+      }
+    });
+
+    linha += "</tr>";
+    tbody.innerHTML += linha;
   }
-
-  agenda.push({ pet, servico, hora: horario });
-
-  salvar();
-  renderAgenda();
 }
 
-function renderAgenda() {
-  const lista = document.getElementById("agenda");
-  lista.innerHTML = "";
-
-  agenda.sort((a,b) => a.hora.localeCompare(b.hora));
-
-  agenda.forEach(a => {
-    let li = document.createElement("li");
-    li.textContent = `${a.hora} - ${a.pet} (${a.servico})`;
-    lista.appendChild(li);
-  });
-}
-
-function iniciar() {
+function iniciar(){
   atualizarSelects();
-  renderAgenda();
+  renderTabela();
 }
 
 iniciar();
