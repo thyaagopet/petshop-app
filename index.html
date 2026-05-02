@@ -3,124 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda Pet Shop</title>
+<title>Pet Shop Pro</title>
 
 <style>
-body {
-  font-family: Arial;
-  background: #ffe4ec;
-  padding: 10px;
-}
-
-h1 {
-  text-align: center;
-  color: #e91e63;
-}
-
-.card {
-  background: white;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
+body { font-family: Arial; background:#ffe4ec; padding:10px;}
+h1 { text-align:center; color:#e91e63;}
+.card { background:white; padding:10px; border-radius:10px; margin-bottom:10px;}
 input, select, button {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 6px;
-  border: none;
+  width:100%; padding:8px; margin-top:5px; border-radius:6px; border:none;
 }
-
-button {
-  background: #e91e63;
-  color: white;
-  font-weight: bold;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  text-align: center;
-  padding: 5px;
-}
-
-th {
-  background: #e91e63;
-  color: white;
-}
+button { background:#e91e63; color:white; font-weight:bold;}
+table { width:100%; border-collapse:collapse; font-size:12px;}
+th, td { border:1px solid #ccc; padding:5px; text-align:center;}
+th { background:#e91e63; color:white;}
 </style>
 </head>
 
 <body>
 
-<h1>🐶 Agenda Pet Shop</h1>
+<h1>🐶 Pet Shop Pro</h1>
 
 <div class="card">
-<h3>Cadastrar Tutor</h3>
+<h3>Tutor</h3>
 <input id="tutorNome" placeholder="Nome">
 <input id="tutorTel" placeholder="Telefone">
 <button onclick="addTutor()">Salvar</button>
 </div>
 
 <div class="card">
-<h3>Cadastrar Pet</h3>
+<h3>Pet</h3>
 <input id="petNome" placeholder="Nome do pet">
-
 <select id="porte">
 <option>Pequeno</option>
 <option>Médio</option>
 <option>Grande</option>
 <option>Gigante</option>
 </select>
-
 <select id="tutorSelect"></select>
-
 <button onclick="addPet()">Salvar Pet</button>
 </div>
 
 <div class="card">
-<h3>Agendar</h3>
-
-<select id="dia">
-<option>Segunda</option>
-<option>Terça</option>
-<option>Quarta</option>
-<option>Quinta</option>
-<option>Sexta</option>
-<option>Sábado</option>
-</select>
-
+<h3>Agendamento</h3>
+<input type="date" id="data">
 <input type="time" id="hora">
-
 <select id="petSelect"></select>
+
+<select id="servico">
+<option>Banho</option>
+<option>Tosa</option>
+<option>Remoção</option>
+<option>Pacote Semanal</option>
+</select>
 
 <button onclick="agendar()">Agendar</button>
 </div>
 
 <div class="card">
-<h3>Agenda Semanal</h3>
-
-<table id="tabela">
+<h3>Agenda</h3>
+<table>
 <thead>
 <tr>
+<th>Data</th>
 <th>Hora</th>
-<th>Seg</th>
-<th>Ter</th>
-<th>Qua</th>
-<th>Qui</th>
-<th>Sex</th>
-<th>Sáb</th>
+<th>Pet</th>
+<th>Tutor</th>
+<th>Serviço</th>
+<th>Ação</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="lista"></tbody>
 </table>
-
 </div>
 
 <script>
@@ -128,15 +81,13 @@ let tutores = JSON.parse(localStorage.getItem("tutores") || "[]");
 let pets = JSON.parse(localStorage.getItem("pets") || "[]");
 let agenda = JSON.parse(localStorage.getItem("agenda") || "[]");
 
-const dias = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
-
 function salvar(){
   localStorage.setItem("tutores", JSON.stringify(tutores));
   localStorage.setItem("pets", JSON.stringify(pets));
   localStorage.setItem("agenda", JSON.stringify(agenda));
 }
 
-function atualizarSelects(){
+function atualizar(){
   tutorSelect.innerHTML="";
   petSelect.innerHTML="";
 
@@ -150,73 +101,95 @@ function atualizarSelects(){
 }
 
 function addTutor(){
-  const nome = tutorNome.value;
-  const tel = tutorTel.value;
-
+  let nome=tutorNome.value;
+  let tel=tutorTel.value;
   if(!nome) return;
 
   tutores.push({nome,tel});
-  salvar();
-  atualizarSelects();
+  salvar(); atualizar();
 }
 
 function addPet(){
-  const nome = petNome.value;
-  const porte = porte.value;
-  const tutor = tutorSelect.value;
+  let nome=petNome.value;
+  let porte=porte.value;
+  let tutor=tutorSelect.value;
 
   if(!nome || !tutor) return;
 
   pets.push({nome,porte,tutor});
-  salvar();
-  atualizarSelects();
+  salvar(); atualizar();
+}
+
+function conflito(data,hora){
+  return agenda.some(a=>a.data===data && a.hora===hora);
 }
 
 function agendar(){
-  const dia = document.getElementById("dia").value;
-  const hora = document.getElementById("hora").value;
-  const petNome = document.getElementById("petSelect").value;
+  let data=document.getElementById("data").value;
+  let hora=document.getElementById("hora").value;
+  let petNome=petSelect.value;
+  let servico=document.getElementById("servico").value;
 
-  if(!hora || !petNome) return;
+  if(!data||!hora||!petNome) return;
 
-  const pet = pets.find(p=>p.nome===petNome);
+  if(conflito(data,hora)){
+    alert("Horário já ocupado!");
+    return;
+  }
 
-  agenda.push({
-    dia,
-    hora,
-    pet: pet.nome,
-    tutor: pet.tutor
-  });
+  let pet=pets.find(p=>p.nome===petNome);
+
+  if(servico==="Pacote Semanal"){
+    for(let i=0;i<4;i++){
+      let novaData=new Date(data);
+      novaData.setDate(novaData.getDate()+7*i);
+
+      agenda.push({
+        data:novaData.toISOString().split("T")[0],
+        hora,
+        pet:pet.nome,
+        tutor:pet.tutor,
+        servico
+      });
+    }
+  } else {
+    agenda.push({data,hora,pet:pet.nome,tutor:pet.tutor,servico});
+  }
 
   salvar();
-  renderTabela();
+  render();
 }
 
-function renderTabela(){
-  const tbody = document.querySelector("#tabela tbody");
-  tbody.innerHTML="";
+function enviarWhats(tutor,pet,data,hora){
+  let msg=`Olá! Lembrando do banho do ${pet} dia ${data} às ${hora} 🐶`;
+  window.open(`https://wa.me/55${tutor}?text=${encodeURIComponent(msg)}`);
+}
 
-  for(let h=9; h<=19; h++){
-    let linha = `<tr><td>${h}:00</td>`;
+function render(){
+  lista.innerHTML="";
 
-    dias.forEach(d=>{
-      const item = agenda.find(a=>a.dia===d && a.hora.startsWith(h.toString().padStart(2,"0")));
+  agenda
+  .sort((a,b)=> new Date(a.data+" "+a.hora)-new Date(b.data+" "+b.hora))
+  .forEach((a,i)=>{
+    let tutorObj=tutores.find(t=>t.nome===a.tutor);
 
-      if(item){
-        linha += `<td>${item.pet}<br><small>${item.tutor}</small></td>`;
-      } else {
-        linha += `<td></td>`;
-      }
-    });
-
-    linha += "</tr>";
-    tbody.innerHTML += linha;
-  }
+    lista.innerHTML+=`
+    <tr>
+      <td>${new Date(a.data).toLocaleDateString()}</td>
+      <td>${a.hora}</td>
+      <td>${a.pet}</td>
+      <td>${a.tutor}</td>
+      <td>${a.servico}</td>
+      <td>
+        <button onclick="enviarWhats('${tutorObj?.tel}','${a.pet}','${a.data}','${a.hora}')">📲</button>
+      </td>
+    </tr>`;
+  });
 }
 
 function iniciar(){
-  atualizarSelects();
-  renderTabela();
+  atualizar();
+  render();
 }
 
 iniciar();
