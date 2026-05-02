@@ -58,6 +58,7 @@ th { background:#e91e63; color:white;}
 </select>
 
 <button onclick="agendar()">Agendar</button>
+<button onclick="lembretesHoje()">📲 Lembretes do Dia</button>
 </div>
 
 <div class="card">
@@ -71,6 +72,7 @@ th { background:#e91e63; color:white;}
 <th>Tutor</th>
 <th>Serviço</th>
 <th>Valor</th>
+<th>Lembrete</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
@@ -177,6 +179,33 @@ function agendar(){
   render();
 }
 
+function enviarWhats(tel, pet, data, hora) {
+  if (!tel) {
+    alert("Sem telefone");
+    return;
+  }
+
+  tel = tel.replace(/\D/g, "");
+  if (!tel.startsWith("55")) tel = "55" + tel;
+
+  const dataFormatada = new Date(data).toLocaleDateString("pt-BR");
+
+  const msg = `Lembrete: ${pet} dia ${dataFormatada} às ${hora} 🐶`;
+
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`);
+}
+
+function lembretesHoje(){
+  let hoje=new Date().toISOString().split("T")[0];
+
+  agenda.forEach(a=>{
+    if(a.data===hoje){
+      let tutor=tutores.find(t=>t.nome===a.tutor);
+      enviarWhats(tutor?.tel,a.pet,a.data,a.hora);
+    }
+  });
+}
+
 function render(){
   const lista=document.getElementById("lista");
   lista.innerHTML="";
@@ -184,6 +213,8 @@ function render(){
   agenda
   .sort((a,b)=> new Date(a.data+" "+a.hora)-new Date(b.data+" "+b.hora))
   .forEach(a=>{
+    let tutorObj=tutores.find(t=>t.nome===a.tutor);
+
     lista.innerHTML+=`
     <tr>
       <td>${new Date(a.data).toLocaleDateString()}</td>
@@ -192,6 +223,9 @@ function render(){
       <td>${a.tutor}</td>
       <td>${a.servico}</td>
       <td>R$ ${a.valor}</td>
+      <td>
+        <button onclick="enviarWhats('${tutorObj?.tel}','${a.pet}','${a.data}','${a.hora}')">📲</button>
+      </td>
     </tr>`;
   });
 }
