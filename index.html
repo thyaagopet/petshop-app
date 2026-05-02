@@ -42,4 +42,127 @@ button { background: #e91e63; color: white; font-weight: bold; }
 <option>Gigante</option>
 </select>
 
-<select
+<select id="tutorSelect"></select>
+
+<button onclick="addPet()">Salvar Pet</button>
+</div>
+
+<div class="card">
+<h3>Agenda</h3>
+
+<select id="petSelect"></select>
+
+<select id="servico">
+<option>Banho</option>
+<option>Tosa</option>
+<option>Remoção</option>
+<option>Pacote Semanal</option>
+</select>
+
+<input type="time" id="horario">
+
+<button onclick="agendar()">Agendar</button>
+
+<ul id="agenda"></ul>
+</div>
+
+<script>
+let tutores = JSON.parse(localStorage.getItem("tutores") || "[]");
+let pets = JSON.parse(localStorage.getItem("pets") || "[]");
+let agenda = JSON.parse(localStorage.getItem("agenda") || "[]");
+
+function salvar() {
+  localStorage.setItem("tutores", JSON.stringify(tutores));
+  localStorage.setItem("pets", JSON.stringify(pets));
+  localStorage.setItem("agenda", JSON.stringify(agenda));
+}
+
+function atualizarSelects() {
+  const tutorSel = document.getElementById("tutorSelect");
+  const petSel = document.getElementById("petSelect");
+
+  tutorSel.innerHTML = "";
+  petSel.innerHTML = "";
+
+  tutores.forEach(t => {
+    let op = document.createElement("option");
+    op.value = t.nome;
+    op.textContent = t.nome;
+    tutorSel.appendChild(op);
+  });
+
+  pets.forEach(p => {
+    let op = document.createElement("option");
+    op.value = p.nome;
+    op.textContent = p.nome;
+    petSel.appendChild(op);
+  });
+}
+
+function addTutor() {
+  const nome = document.getElementById("tutorNome").value;
+  const tel = document.getElementById("tutorTel").value;
+
+  if (!nome) return;
+
+  tutores.push({ nome, tel });
+  salvar();
+  atualizarSelects();
+
+  document.getElementById("tutorNome").value = "";
+  document.getElementById("tutorTel").value = "";
+}
+
+function addPet() {
+  const nome = document.getElementById("petNome").value;
+  const porte = document.getElementById("porte").value;
+  const tutor = document.getElementById("tutorSelect").value;
+
+  if (!nome || !tutor) return;
+
+  pets.push({ nome, porte, tutor });
+  salvar();
+  atualizarSelects();
+
+  document.getElementById("petNome").value = "";
+}
+
+function agendar() {
+  const pet = document.getElementById("petSelect").value;
+  const servico = document.getElementById("servico").value;
+  const horario = document.getElementById("horario").value;
+
+  if (!pet || !horario) {
+    alert("Escolha pet e horário");
+    return;
+  }
+
+  agenda.push({ pet, servico, hora: horario });
+
+  salvar();
+  renderAgenda();
+}
+
+function renderAgenda() {
+  const lista = document.getElementById("agenda");
+  lista.innerHTML = "";
+
+  agenda.sort((a,b) => a.hora.localeCompare(b.hora));
+
+  agenda.forEach(a => {
+    let li = document.createElement("li");
+    li.textContent = `${a.hora} - ${a.pet} (${a.servico})`;
+    lista.appendChild(li);
+  });
+}
+
+function iniciar() {
+  atualizarSelects();
+  renderAgenda();
+}
+
+iniciar();
+</script>
+
+</body>
+</html>
