@@ -6,40 +6,16 @@
 <title>Pet Shop</title>
 
 <style>
-body {
-  font-family: Arial;
-  background: #ffe4ec;
-  padding: 15px;
-}
-
-h1 {
-  text-align: center;
-  color: #e91e63;
-}
-
+body { font-family: Arial; background: #ffe4ec; padding: 15px; }
+h1 { text-align: center; color: #e91e63; }
 input, select, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border-radius: 8px;
-  border: none;
+  width: 100%; padding: 10px; margin-top: 5px;
+  border-radius: 8px; border: none;
 }
-
-button {
-  background: #e91e63;
-  color: white;
-  font-weight: bold;
-}
-
+button { background: #e91e63; color: white; font-weight: bold; }
 .card {
-  background: white;
-  padding: 15px;
-  border-radius: 12px;
-  margin-top: 15px;
-}
-
-li {
-  margin-top: 5px;
+  background: white; padding: 15px;
+  border-radius: 12px; margin-top: 15px;
 }
 </style>
 </head>
@@ -49,156 +25,117 @@ li {
 <h1>🐶 Cão Turminha</h1>
 
 <div class="card">
-  <h3>Cadastrar Tutor</h3>
-  <input id="tutorNome" placeholder="Nome">
-  <input id="tutorTel" placeholder="Telefone">
-  <button onclick="addTutor()">Salvar</button>
+<h3>Cadastrar Tutor</h3>
+<input id="tutorNome" placeholder="Nome">
+<input id="tutorTel" placeholder="Telefone">
+<button onclick="addTutor()">Salvar</button>
 </div>
 
 <div class="card">
-  <h3>Cadastrar Pet</h3>
-  <input id="petNome" placeholder="Nome do pet">
-
-  <select id="porte">
-    <option>Pequeno</option>
-    <option>Médio</option>
-    <option>Grande</option>
-    <option>Gigante</option>
-  </select>
-
-  <select id="tutorSelect"></select>
-
-  <button onclick="addPet()">Salvar Pet</button>
+<h3>Cadastrar Pet</h3>
+<input id="petNome" placeholder="Nome do pet">
+<select id="porte">
+<option>Pequeno</option>
+<option>Médio</option>
+<option>Grande</option>
+<option>Gigante</option>
+</select>
+<select id="tutorSelect"></select>
+<button onclick="addPet()">Salvar Pet</button>
 </div>
 
 <div class="card">
-  <h3>Agenda</h3>
-  <select id="petSelect"></select>
-  <select id="servico">
-    <option>Banho</option>
-    <option>Tosa</option>
-    <option>Remoção</option>
-    <option>Pacote Semanal</option>
-  </select>
-
-  <button onclick="agendar()">Agendar</button>
-
-  <button onclick="enviarLembretes()" style="background:green;margin-top:10px;">
-    Enviar lembretes do dia
-  </button>
-
-  <ul id="agenda"></ul>
+<h3>Agenda</h3>
+<select id="petSelect"></select>
+<select id="servico">
+<option>Banho</option>
+<option>Tosa</option>
+<option>Remoção</option>
+<option>Pacote Semanal</option>
+</select>
+<button onclick="agendar()">Agendar</button>
+<ul id="agenda"></ul>
 </div>
 
 <script>
-let tutores = [];
-let pets = [];
-let agenda = [];
+let tutores = JSON.parse(localStorage.getItem("tutores")) || [];
+let pets = JSON.parse(localStorage.getItem("pets")) || [];
+let agenda = JSON.parse(localStorage.getItem("agenda")) || [];
 
-function formatarHora(min) {
-  let h = Math.floor(min / 60);
-  let m = min % 60;
-  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-}
-
-function calcularDuracao(porte, servico) {
-  let tempo = (porte === "Pequeno" || porte === "Médio") ? 60 : 120;
-
-  if (servico === "Tosa") tempo += 90;
-  if (servico === "Remoção") tempo += (porte === "Grande" || porte === "Gigante") ? 60 : 30;
-
-  return tempo;
-}
-
-function temConflito(inicio, duracao) {
-  return agenda.some(a =>
-    inicio < a.inicio + a.duracao &&
-    inicio + duracao > a.inicio
-  );
-}
-
-function encontrarHorarioLivre(duracao) {
-  for (let t = 540; t < 1140; t += 30) {
-    if (!temConflito(t, duracao)) return t;
-  }
-  return null;
-}
-
-function addTutor() {
-  const nome = document.getElementById('tutorNome').value;
-  const tel = document.getElementById('tutorTel').value;
-
-  tutores.push({ nome, tel });
-
-  atualizarSelects();
-}
-
-function addPet() {
-  const nome = document.getElementById('petNome').value;
-  const porte = document.getElementById('porte').value;
-  const tutor = document.getElementById('tutorSelect').value;
-
-  pets.push({ nome, porte, tutor });
-
-  atualizarSelects();
+function salvar() {
+  localStorage.setItem("tutores", JSON.stringify(tutores));
+  localStorage.setItem("pets", JSON.stringify(pets));
+  localStorage.setItem("agenda", JSON.stringify(agenda));
 }
 
 function atualizarSelects() {
-  const tutorSel = document.getElementById('tutorSelect');
-  const petSel = document.getElementById('petSelect');
-
-  tutorSel.innerHTML = "";
-  petSel.innerHTML = "";
+  tutorSelect.innerHTML = "";
+  petSelect.innerHTML = "";
 
   tutores.forEach(t => {
-    tutorSel.innerHTML += `<option>${t.nome}</option>`;
+    tutorSelect.innerHTML += `<option>${t.nome}</option>`;
   });
 
   pets.forEach(p => {
-    petSel.innerHTML += `<option>${p.nome}</option>`;
+    petSelect.innerHTML += `<option>${p.nome}</option>`;
   });
 }
 
+function addTutor() {
+  const nome = tutorNome.value;
+  const tel = tutorTel.value;
+
+  if (!nome) return;
+
+  tutores.push({ nome, tel });
+  salvar();
+  atualizarSelects();
+
+  tutorNome.value = "";
+  tutorTel.value = "";
+}
+
+function addPet() {
+  const nome = petNome.value;
+  const porte = porte.value;
+  const tutor = tutorSelect.value;
+
+  if (!nome) return;
+
+  pets.push({ nome, porte, tutor });
+  salvar();
+  atualizarSelects();
+
+  petNome.value = "";
+}
+
 function agendar() {
-  const petNome = document.getElementById('petSelect').value;
-  const servico = document.getElementById('servico').value;
+  const pet = petSelect.value;
+  const servico = servico.value;
 
-  const pet = pets.find(p => p.nome === petNome);
-  const duracao = calcularDuracao(pet.porte, servico);
+  agenda.push({
+    pet,
+    servico,
+    hora: new Date().toLocaleTimeString()
+  });
 
-  let inicio = encontrarHorarioLivre(duracao);
-
-  if (inicio === null) {
-    alert("Agenda cheia!");
-    return;
-  }
-
-  agenda.push({ pet: petNome, inicio, duracao });
-
+  salvar();
   renderAgenda();
 }
 
 function renderAgenda() {
-  const lista = document.getElementById('agenda');
-  lista.innerHTML = "";
-
-  agenda.sort((a,b)=>a.inicio-b.inicio);
-
+  agendaEl.innerHTML = "";
   agenda.forEach(a => {
-    lista.innerHTML += `<li>${formatarHora(a.inicio)} - ${a.pet}</li>`;
+    agendaEl.innerHTML += `<li>${a.hora} - ${a.pet} (${a.servico})</li>`;
   });
 }
 
-function enviarLembretes() {
-  agenda.forEach(a => {
-    const pet = pets.find(p => p.nome === a.pet);
-    const tutor = tutores.find(t => t.nome === pet.tutor);
+const tutorSelect = document.getElementById("tutorSelect");
+const petSelect = document.getElementById("petSelect");
+const agendaEl = document.getElementById("agenda");
 
-    const msg = `Olá! Hoje o ${a.pet} tem banho às ${formatarHora(a.inicio)} 🐶`;
-
-    window.open(`https://wa.me/55${tutor.tel}?text=${encodeURIComponent(msg)}`);
-  });
-}
+atualizarSelects();
+renderAgenda();
 </script>
 
 </body>
