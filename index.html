@@ -16,6 +16,7 @@ button { background:#e91e63; color:white; font-weight:bold;}
 table { width:100%; border-collapse:collapse; font-size:12px;}
 th, td { border:1px solid #ccc; padding:5px; text-align:center;}
 th { background:#e91e63; color:white;}
+.total { font-weight:bold; margin-top:10px; }
 </style>
 </head>
 
@@ -50,10 +51,10 @@ th { background:#e91e63; color:white;}
 <select id="petSelect"></select>
 
 <select id="servico">
-<option>Banho</option>
-<option>Tosa</option>
-<option>Remoção</option>
-<option>Pacote Semanal</option>
+<option value="50">Banho</option>
+<option value="80">Tosa</option>
+<option value="60">Remoção</option>
+<option value="200">Pacote Semanal</option>
 </select>
 
 <button onclick="agendar()">Agendar</button>
@@ -69,11 +70,14 @@ th { background:#e91e63; color:white;}
 <th>Pet</th>
 <th>Tutor</th>
 <th>Serviço</th>
+<th>Valor</th>
 <th>Ação</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
 </table>
+
+<div class="total" id="totalDia"></div>
 </div>
 
 <script>
@@ -128,7 +132,9 @@ function agendar(){
   let data=document.getElementById("data").value;
   let hora=document.getElementById("hora").value;
   let petNome=petSelect.value;
-  let servico=document.getElementById("servico").value;
+  let servicoSelect=document.getElementById("servico");
+  let servicoNome=servicoSelect.options[servicoSelect.selectedIndex].text;
+  let valor=parseFloat(servicoSelect.value);
 
   if(!data||!hora||!petNome) return;
 
@@ -139,61 +145,11 @@ function agendar(){
 
   let pet=pets.find(p=>p.nome===petNome);
 
-  if(servico==="Pacote Semanal"){
+  if(servicoNome==="Pacote Semanal"){
     for(let i=0;i<4;i++){
       let novaData=new Date(data);
       novaData.setDate(novaData.getDate()+7*i);
 
       agenda.push({
         data:novaData.toISOString().split("T")[0],
-        hora,
-        pet:pet.nome,
-        tutor:pet.tutor,
-        servico
-      });
-    }
-  } else {
-    agenda.push({data,hora,pet:pet.nome,tutor:pet.tutor,servico});
-  }
-
-  salvar();
-  render();
-}
-
-function enviarWhats(tutor,pet,data,hora){
-  let msg=`Olá! Lembrando do banho do ${pet} dia ${data} às ${hora} 🐶`;
-  window.open(`https://wa.me/55${tutor}?text=${encodeURIComponent(msg)}`);
-}
-
-function render(){
-  lista.innerHTML="";
-
-  agenda
-  .sort((a,b)=> new Date(a.data+" "+a.hora)-new Date(b.data+" "+b.hora))
-  .forEach((a,i)=>{
-    let tutorObj=tutores.find(t=>t.nome===a.tutor);
-
-    lista.innerHTML+=`
-    <tr>
-      <td>${new Date(a.data).toLocaleDateString()}</td>
-      <td>${a.hora}</td>
-      <td>${a.pet}</td>
-      <td>${a.tutor}</td>
-      <td>${a.servico}</td>
-      <td>
-        <button onclick="enviarWhats('${tutorObj?.tel}','${a.pet}','${a.data}','${a.hora}')">📲</button>
-      </td>
-    </tr>`;
-  });
-}
-
-function iniciar(){
-  atualizar();
-  render();
-}
-
-iniciar();
-</script>
-
-</body>
-</html>
+        hora
