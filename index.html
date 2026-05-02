@@ -16,7 +16,6 @@ button { background:#e91e63; color:white; font-weight:bold;}
 table { width:100%; border-collapse:collapse; font-size:12px;}
 th, td { border:1px solid #ccc; padding:5px; text-align:center;}
 th { background:#e91e63; color:white;}
-.total { font-weight:bold; margin-top:5px;}
 </style>
 </head>
 
@@ -59,7 +58,6 @@ th { background:#e91e63; color:white;}
 </select>
 
 <button onclick="agendar()">Agendar</button>
-<button onclick="lembretesHoje()">📲 Lembretes do Dia</button>
 </div>
 
 <div class="card">
@@ -73,15 +71,10 @@ th { background:#e91e63; color:white;}
 <th>Tutor</th>
 <th>Serviço</th>
 <th>Valor</th>
-<th>Ação</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
 </table>
-
-<div class="total" id="totalDia"></div>
-<div class="total" id="totalMes"></div>
-
 </div>
 
 <script>
@@ -96,36 +89,48 @@ function salvar(){
 }
 
 function atualizar(){
+  const tutorSelect = document.getElementById("tutorSelect");
+  const petSelect = document.getElementById("petSelect");
+
   tutorSelect.innerHTML="";
   petSelect.innerHTML="";
 
   tutores.forEach(t=>{
-    tutorSelect.innerHTML += `<option>${t.nome}</option>`;
+    let op=document.createElement("option");
+    op.value=t.nome;
+    op.textContent=t.nome;
+    tutorSelect.appendChild(op);
   });
 
   pets.forEach(p=>{
-    petSelect.innerHTML += `<option>${p.nome}</option>`;
+    let op=document.createElement("option");
+    op.value=p.nome;
+    op.textContent=p.nome;
+    petSelect.appendChild(op);
   });
 }
 
 function addTutor(){
-  let nome=tutorNome.value;
-  let tel=tutorTel.value;
+  const nome=document.getElementById("tutorNome").value.trim();
+  const tel=document.getElementById("tutorTel").value.trim();
+
   if(!nome) return;
 
   tutores.push({nome,tel});
-  salvar(); atualizar();
+  salvar();
+  atualizar();
 }
 
 function addPet(){
-  let nome=petNome.value;
-  let porte=porte.value;
-  let tutor=tutorSelect.value;
+  const nome=document.getElementById("petNome").value.trim();
+  const porte=document.getElementById("porte").value;
+  const tutor=document.getElementById("tutorSelect").value;
 
   if(!nome || !tutor) return;
 
   pets.push({nome,porte,tutor});
-  salvar(); atualizar();
+  salvar();
+  atualizar();
 }
 
 function conflito(data,hora){
@@ -133,25 +138,24 @@ function conflito(data,hora){
 }
 
 function agendar(){
-  let data=dataInput.value;
-  let hora=horaInput.value;
-  let petNome=petSelect.value;
-  let servicoSelect=document.getElementById("servico");
+  const data=document.getElementById("data").value;
+  const hora=document.getElementById("hora").value;
+  const petNome=document.getElementById("petSelect").value;
+  const servicoSelect=document.getElementById("servico");
 
-  let servicoNome=servicoSelect.options[servicoSelect.selectedIndex].text;
-  let valor=parseFloat(servicoSelect.value);
+  const servicoNome=servicoSelect.options[servicoSelect.selectedIndex].text;
+  const valor=parseFloat(servicoSelect.value);
 
-  if(!data||!hora||!petNome) return;
+  if(!data || !hora || !petNome) return;
 
   if(conflito(data,hora)){
     alert("Horário ocupado!");
     return;
   }
 
-  let pet=pets.find(p=>p.nome===petNome);
+  const pet=pets.find(p=>p.nome===petNome);
 
-  let repeticoes = 1;
-
+  let repeticoes=1;
   if(servicoNome==="Pacote Semanal") repeticoes=4;
   if(servicoNome==="Pacote Quinzenal") repeticoes=2;
 
@@ -173,16 +177,13 @@ function agendar(){
   render();
 }
 
-function enviarWhats(tel, pet, data, hora) {
-  if (!tel) return;
+function render(){
+  const lista=document.getElementById("lista");
+  lista.innerHTML="";
 
-  tel = tel.replace(/\D/g, "");
-  if (!tel.startsWith("55")) tel = "55" + tel;
-
-  let msg = `Lembrete: ${pet} dia ${new Date(data).toLocaleDateString()} às ${hora} 🐶`;
-
-  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`);
-}
-
-function lembretesHoje(){
-  let hoje=new Date().toISOString().split("T
+  agenda
+  .sort((a,b)=> new Date(a.data+" "+a.hora)-new Date(b.data+" "+b.hora))
+  .forEach(a=>{
+    lista.innerHTML+=`
+    <tr>
+      <td>${new
