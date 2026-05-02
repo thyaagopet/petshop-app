@@ -3,19 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pet Shop</title>
+<title>Cão Turminha</title>
 
 <style>
-body { font-family: Arial; background: #ffe4ec; padding: 15px; }
-h1 { text-align: center; color: #e91e63; }
-input, select, button {
-  width: 100%; padding: 10px; margin-top: 5px;
-  border-radius: 8px; border: none;
+body {
+  font-family: Arial;
+  background: #ffe4ec;
+  padding: 15px;
 }
-button { background: #e91e63; color: white; font-weight: bold; }
+h1 {
+  text-align: center;
+  color: #e91e63;
+}
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: none;
+}
+button {
+  background: #e91e63;
+  color: white;
+  font-weight: bold;
+}
 .card {
-  background: white; padding: 15px;
-  border-radius: 12px; margin-top: 15px;
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 15px;
 }
 </style>
 </head>
@@ -34,26 +50,33 @@ button { background: #e91e63; color: white; font-weight: bold; }
 <div class="card">
 <h3>Cadastrar Pet</h3>
 <input id="petNome" placeholder="Nome do pet">
+
 <select id="porte">
 <option>Pequeno</option>
 <option>Médio</option>
 <option>Grande</option>
 <option>Gigante</option>
 </select>
+
 <select id="tutorSelect"></select>
+
 <button onclick="addPet()">Salvar Pet</button>
 </div>
 
 <div class="card">
 <h3>Agenda</h3>
+
 <select id="petSelect"></select>
+
 <select id="servico">
 <option>Banho</option>
 <option>Tosa</option>
 <option>Remoção</option>
 <option>Pacote Semanal</option>
 </select>
+
 <button onclick="agendar()">Agendar</button>
+
 <ul id="agenda"></ul>
 </div>
 
@@ -72,27 +95,27 @@ function atualizarSelects() {
   const tutorSel = document.getElementById("tutorSelect");
   const petSel = document.getElementById("petSelect");
 
-  tutorSel.innerHTML = "<option>Selecione tutor</option>";
-  petSel.innerHTML = "<option>Selecione pet</option>";
+  tutorSel.innerHTML = "<option value=''>Selecione tutor</option>";
+  petSel.innerHTML = "<option value=''>Selecione pet</option>";
 
   tutores.forEach(t => {
-    tutorSel.innerHTML += `<option>${t.nome}</option>`;
+    const opt = document.createElement("option");
+    opt.value = t.nome;
+    opt.textContent = t.nome;
+    tutorSel.appendChild(opt);
   });
 
   pets.forEach(p => {
-    petSel.innerHTML += `<option>${p.nome}</option>`;
-  });
-}
-  
-
-  pets.forEach(p => {
-    petSelect.innerHTML += `<option>${p.nome}</option>`;
+    const opt = document.createElement("option");
+    opt.value = p.nome;
+    opt.textContent = p.nome;
+    petSel.appendChild(opt);
   });
 }
 
 function addTutor() {
-  const nome = tutorNome.value;
-  const tel = tutorTel.value;
+  const nome = document.getElementById("tutorNome").value.trim();
+  const tel = document.getElementById("tutorTel").value.trim();
 
   if (!nome) return;
 
@@ -100,27 +123,29 @@ function addTutor() {
   salvar();
   atualizarSelects();
 
-  tutorNome.value = "";
-  tutorTel.value = "";
+  document.getElementById("tutorNome").value = "";
+  document.getElementById("tutorTel").value = "";
 }
 
 function addPet() {
-  const nome = petNome.value;
-  const porte = porte.value;
-  const tutor = tutorSelect.value;
+  const nome = document.getElementById("petNome").value.trim();
+  const porte = document.getElementById("porte").value;
+  const tutor = document.getElementById("tutorSelect").value;
 
-  if (!nome) return;
+  if (!nome || !tutor) return;
 
   pets.push({ nome, porte, tutor });
   salvar();
   atualizarSelects();
 
-  petNome.value = "";
+  document.getElementById("petNome").value = "";
 }
 
 function agendar() {
-  const pet = petSelect.value;
-  const servico = servico.value;
+  const pet = document.getElementById("petSelect").value;
+  const servico = document.getElementById("servico").value;
+
+  if (!pet) return;
 
   agenda.push({
     pet,
@@ -133,18 +158,22 @@ function agendar() {
 }
 
 function renderAgenda() {
-  agendaEl.innerHTML = "";
+  const lista = document.getElementById("agenda");
+  lista.innerHTML = "";
+
   agenda.forEach(a => {
-    agendaEl.innerHTML += `<li>${a.hora} - ${a.pet} (${a.servico})</li>`;
+    const li = document.createElement("li");
+    li.textContent = `${a.hora} - ${a.pet} (${a.servico})`;
+    lista.appendChild(li);
   });
 }
 
-const tutorSelect = document.getElementById("tutorSelect");
-const petSelect = document.getElementById("petSelect");
-const agendaEl = document.getElementById("agenda");
+function iniciar() {
+  atualizarSelects();
+  renderAgenda();
+}
 
-atualizarSelects();
-renderAgenda();
+iniciar();
 </script>
 
 </body>
