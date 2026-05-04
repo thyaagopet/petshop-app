@@ -12,10 +12,15 @@ h1 { text-align:center; color:#e91e63;}
 input, select, button {
   width:100%; padding:8px; margin-top:5px; border-radius:6px; border:none;
 }
-button { background:#e91e63; color:white; font-weight:bold;}
+button { background:#e91e63; color:white; font-weight:bold; margin-top:3px;}
 table { width:100%; border-collapse:collapse; font-size:12px;}
 th, td { border:1px solid #ccc; padding:5px; text-align:center;}
 th { background:#e91e63; color:white;}
+
+.status-agendado { color:blue; }
+.status-confirmado { color:green; }
+.status-cancelado { color:red; }
+.status-faltou { color:orange; }
 </style>
 </head>
 
@@ -70,9 +75,8 @@ th { background:#e91e63; color:white;}
 <th>Hora</th>
 <th>Pet</th>
 <th>Tutor</th>
-<th>Serviço</th>
-<th>Valor</th>
-<th>Lembrete</th>
+<th>Status</th>
+<th>Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
@@ -98,99 +102,77 @@ function atualizar(){
   petSelect.innerHTML="";
 
   tutores.forEach(t=>{
-    let op=document.createElement("option");
-    op.value=t.nome;
-    op.textContent=t.nome;
-    tutorSelect.appendChild(op);
+    tutorSelect.innerHTML += `<option>${t.nome}</option>`;
   });
 
   pets.forEach(p=>{
-    let op=document.createElement("option");
-    op.value=p.nome;
-    op.textContent=p.nome;
-    petSelect.appendChild(op);
+    petSelect.innerHTML += `<option>${p.nome}</option>`;
   });
 }
 
 function addTutor(){
-  const nome=document.getElementById("tutorNome").value.trim();
-  const tel=document.getElementById("tutorTel").value.trim();
-
+  let nome=tutorNome.value;
+  let tel=tutorTel.value;
   if(!nome) return;
 
   tutores.push({nome,tel});
-  salvar();
-  atualizar();
+  salvar(); atualizar();
 }
 
 function addPet(){
-  const nome=document.getElementById("petNome").value.trim();
-  const porte=document.getElementById("porte").value;
-  const tutor=document.getElementById("tutorSelect").value;
+  let nome=petNome.value;
+  let porte=porte.value;
+  let tutor=tutorSelect.value;
 
   if(!nome || !tutor) return;
 
   pets.push({nome,porte,tutor});
-  salvar();
-  atualizar();
-}
-
-function conflito(data,hora){
-  return agenda.some(a=>a.data===data && a.hora===hora);
+  salvar(); atualizar();
 }
 
 function agendar(){
   const data=document.getElementById("data").value;
   const hora=document.getElementById("hora").value;
   const petNome=document.getElementById("petSelect").value;
-  const servicoSelect=document.getElementById("servico");
 
-  const servicoNome=servicoSelect.options[servicoSelect.selectedIndex].text;
-  const valor=parseFloat(servicoSelect.value);
-
-  if(!data || !hora || !petNome) return;
-
-  if(conflito(data,hora)){
-    alert("Horário ocupado!");
-    return;
-  }
+  if(!data||!hora||!petNome) return;
 
   const pet=pets.find(p=>p.nome===petNome);
 
-  let repeticoes=1;
-  if(servicoNome==="Pacote Semanal") repeticoes=4;
-  if(servicoNome==="Pacote Quinzenal") repeticoes=2;
-
-  for(let i=0;i<repeticoes;i++){
-    let novaData=new Date(data);
-    novaData.setDate(novaData.getDate()+7*i);
-
-    agenda.push({
-      data:novaData.toISOString().split("T")[0],
-      hora,
-      pet:pet.nome,
-      tutor:pet.tutor,
-      servico:servicoNome,
-      valor
-    });
-  }
+  agenda.push({
+    data,
+    hora,
+    pet:pet.nome,
+    tutor:pet.tutor,
+    status:"Agendado"
+  });
 
   salvar();
   render();
 }
 
-function enviarWhats(tel, pet, data, hora) {
-  if (!tel) {
-    alert("Sem telefone");
-    return;
-  }
+function alterarStatus(index, novo){
+  agenda[index].status = novo;
+  salvar();
+  render();
+}
+
+function enviarWhats(tel, tutorNome, pet, data, hora) {
+  if (!tel) return;
 
   tel = tel.replace(/\D/g, "");
   if (!tel.startsWith("55")) tel = "55" + tel;
 
-  const dataFormatada = new Date(data).toLocaleDateString("pt-BR");
+  let dataObj = new Date(data);
+  let amanha = new Date();
+  amanha.setDate(amanha.getDate()+1);
 
-  const msg = `Lembrete: ${pet} dia ${dataFormatada} às ${hora} 🐶`;
+  let ehAmanha = dataObj.toDateString() === amanha.toDateString();
+
+  let msg = `Olá ${tutorNome}, bom dia, tudo bem? Espero que sim 😃
+Só passando pra confirmar o banho do(a) ${pet} ${
+    ehAmanha ? "amanhã" : "dia " + dataObj.toLocaleDateString("pt-BR")
+  } às ${hora}. 🐶`;
 
   window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`);
 }
@@ -201,18 +183,15 @@ function lembretesHoje(){
   agenda.forEach(a=>{
     if(a.data===hoje){
       let tutor=tutores.find(t=>t.nome===a.tutor);
-      enviarWhats(tutor?.tel,a.pet,a.data,a.hora);
+      enviarWhats(tutor?.tel,a.tutor,a.pet,a.data,a.hora);
     }
   });
 }
 
 function render(){
-  const lista=document.getElementById("lista");
   lista.innerHTML="";
 
-  agenda
-  .sort((a,b)=> new Date(a.data+" "+a.hora)-new Date(b.data+" "+b.hora))
-  .forEach(a=>{
+  agenda.forEach((a,i)=>{
     let tutorObj=tutores.find(t=>t.nome===a.tutor);
 
     lista.innerHTML+=`
@@ -221,10 +200,12 @@ function render(){
       <td>${a.hora}</td>
       <td>${a.pet}</td>
       <td>${a.tutor}</td>
-      <td>${a.servico}</td>
-      <td>R$ ${a.valor}</td>
+      <td class="status-${a.status.toLowerCase()}">${a.status}</td>
       <td>
-        <button onclick="enviarWhats('${tutorObj?.tel}','${a.pet}','${a.data}','${a.hora}')">📲</button>
+        <button onclick="enviarWhats('${tutorObj?.tel}','${a.tutor}','${a.pet}','${a.data}','${a.hora}')">📲</button>
+        <button onclick="alterarStatus(${i},'Confirmado')">✅</button>
+        <button onclick="alterarStatus(${i},'Cancelado')">❌</button>
+        <button onclick="alterarStatus(${i},'Faltou')">🚫</button>
       </td>
     </tr>`;
   });
